@@ -1,43 +1,34 @@
 # surveydata.py
-# Module for testing the /arms/surveydata endpoint in the ARMS Data API Tester & Explorer application
-
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
-def test_surveydata_endpoint():
-    """
-    Tests the /arms/surveydata API endpoint and handles the response.
-    """
+def test_surveydata_endpoint(year=None, variable=None):
     print("\nTesting /arms/surveydata Endpoint")
-
     try:
-        # Example POST request data
-        post_data = {
-            "year": [2023],
-            "variable": "igovtt"
-        }
+        url = f"{Config.BASE_URL}/surveydata"
+        params = {"api_key": Config.API_KEY}
+        post_data = {}
+        if year:
+            post_data['year'] = [year]
+        if variable:
+            post_data['variable'] = variable
 
-        # Making a POST request to the /arms/surveydata endpoint
-        response = requests.post(f"{Config.BASE_URL}/surveydata?api_key={Config.API_KEY}", json=post_data)
+        response = requests.post(url, params=params, json=post_data)
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, "data/storage/surveydata.csv")
+        browser_url = generate_browser_url(url, params)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "surveydata.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/surveydata", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
+        print(data)
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/surveydata: {e}")
+        print(f"Error: {e}")
+
+# Example usage
+if __name__ == "__main__":
+    selected_year = input("Enter Year (optional): ").strip()
+    selected_variable = input("Enter Variable (optional): ").strip()
+    test_surveydata_endpoint(selected_year, selected_variable)

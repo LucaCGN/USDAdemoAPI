@@ -1,8 +1,7 @@
-# url_generator.py
-# Utility script for generating browser URLs in the ARMS Data API Tester & Explorer application
-
-def generate_browser_url(base_url, endpoint, api_key):
+# utils/url_generator.py
+def generate_browser_url(base_url, params):
     """
-    Generates a browser-accessible URL for the given endpoint and API key.
+    Generates a browser-accessible URL for the given endpoint and parameters.
     """
-    return f"{base_url}{endpoint}?api_key={api_key}"
+    query_string = "&".join([f"{key}={value}" for key, value in params.items()])
+    return f"{base_url}?{query_string}"

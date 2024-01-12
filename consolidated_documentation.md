@@ -1,430 +1,342 @@
-## modules/surveydata.py
-```
-# surveydata.py
-# Module for testing the /arms/surveydata endpoint in the ARMS Data API Tester & Explorer application
-
-import requests
-from config import Config
-from utils.csv_writer import write_to_csv
-from utils.url_generator import generate_browser_url
-
-def test_surveydata_endpoint():
-    """
-    Tests the /arms/surveydata API endpoint and handles the response.
-    """
-    print("\nTesting /arms/surveydata Endpoint")
-
-    try:
-        # Example POST request data
-        post_data = {
-            "year": [2023],
-            "variable": "igovtt"
-        }
-
-        # Making a POST request to the /arms/surveydata endpoint
-        response = requests.post(f"{Config.BASE_URL}/surveydata?api_key={Config.API_KEY}", json=post_data)
-        response.raise_for_status()
-
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
-
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "surveydata.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/surveydata", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
-    except requests.RequestException as e:
-        print(f"Error fetching data from /arms/surveydata: {e}")
-
-```
 ## modules/state.py
 ```
 # state.py
-# Module for testing the /arms/state endpoint in the ARMS Data API Tester & Explorer application
-
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
-def test_state_endpoint():
+def get_state_options():
     """
-    Tests the /arms/state API endpoint and handles the response.
+    Fetches the state options from the API and returns them as a list of options.
+    """
+    response = requests.get(f"{Config.BASE_URL}/state?api_key={Config.API_KEY}")
+    response.raise_for_status()
+    data = response.json()['data']
+    return [(state['id'], state['name']) for state in data]
+
+def test_state_endpoint(state_id=None):
+    """
+    Tests the /arms/state API endpoint with an optional state_id parameter.
     """
     print("\nTesting /arms/state Endpoint")
-
     try:
-        # Making a GET request to the /arms/state endpoint
-        response = requests.get(f"{Config.BASE_URL}/state?api_key={Config.API_KEY}")
+        url = f"{Config.BASE_URL}/state"
+        params = {"api_key": Config.API_KEY}
+        if state_id is not None:
+            params['id'] = state_id
+        
+        response = requests.get(url, params=params)
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, "data/storage/state_data.csv")
+        browser_url = generate_browser_url(url, params)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "state_data.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/state", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
+        # Print the response data
+        print(data)
+        
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/state: {e}")
-```
-## main.py
-```
-# main.py
-# Main file for the ARMS Data API Tester & Explorer application
+        print(f"Error: {e}")
 
-import sys
-from modules import state, year, surveydata, category, report, variable, farmtype
 
-def main_menu():
-    """
-    Displays the main menu of the application.
-    """
-    print("\nARMS Data API Tester & Explorer")
-    print("--------------------------------")
-    print("1: Test /arms/state Endpoint")
-    print("2: Test /arms/year Endpoint")
-    print("3: Test /arms/surveydata Endpoint")
-    print("4: Test /arms/category Endpoint")
-    print("5: Test /arms/report Endpoint")
-    print("6: Test /arms/variable Endpoint")
-    print("7: Test /arms/farmtype Endpoint")
-    print("0: Exit")
-    print("--------------------------------")
-    
-    choice = input("Enter your choice: ")
-    return choice
-
-def execute_choice(choice):
-    """
-    Executes the selected choice from the main menu.
-    """
-    if choice == "1":
-        state.test_state_endpoint()
-    elif choice == "2":
-        year.test_year_endpoint()
-    elif choice == "3":
-        surveydata.test_surveydata_endpoint()
-    elif choice == "4":
-        category.test_category_endpoint()
-    elif choice == "5":
-        report.test_report_endpoint()
-    elif choice == "6":
-        variable.test_variable_endpoint()
-    elif choice == "7":
-        farmtype.test_farmtype_endpoint()
-    elif choice == "0":
-        sys.exit("Exiting the application. Goodbye!")
-    else:
-        print("Invalid choice. Please try again.")
-
-def main():
-    while True:
-        choice = main_menu()
-        execute_choice(choice)
-
+# Example usage
 if __name__ == "__main__":
-    main()
-```
-## modules/variable.py
-```
-# variable.py
-# Module for testing the /arms/variable endpoint in the ARMS Data API Tester & Explorer application
+    state_options = get_state_options()
+    print("Available States:")
+    for id, name in state_options:
+        print(f"{id}: {name}")
+    
+    selected_id = input("Enter State ID to test, or leave empty to fetch all: ").strip()
+    if selected_id:
+        test_state_endpoint(selected_id)
+    else:
+        test_state_endpoint()
 
+```
+## modules/year.py
+```
+# year.py
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
-def test_variable_endpoint(variable_id):
+def get_year_options():
     """
-    Tests the /arms/variable API endpoint and handles the response.
+    Fetches the available years from the API and returns them as a list of options.
     """
-    print(f"\nTesting /arms/variable Endpoint for Variable ID: {variable_id}")
+    response = requests.get(f"{Config.BASE_URL}/year?api_key={Config.API_KEY}")
+    response.raise_for_status()
+    data = response.json()['data']
+    return data  # Assuming the API returns a list of years
 
+def test_year_endpoint(year=None):
+    """
+    Tests the /arms/year API endpoint with an optional year parameter.
+    """
+    print("\nTesting /arms/year Endpoint")
     try:
-        # Making a GET request to the /arms/variable endpoint with a specific variable ID
-        response = requests.get(f"{Config.BASE_URL}/variable?api_key={Config.API_KEY}&id={variable_id}")
+        url = f"{Config.BASE_URL}/year"
+        params = {"api_key": Config.API_KEY}
+        if year is not None:
+            params['year'] = year
+        
+        response = requests.get(url, params=params)
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, "data/storage/year_data.csv")
+        browser_url = generate_browser_url(url, params)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, f"variable_{variable_id}_data.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, f"/variable?id={variable_id}", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data)
-
+        print(data)
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/variable: {e}")
+        print(f"Error: {e}")
 
-```
-## utils/url_generator.py
-```
-# url_generator.py
-# Utility script for generating browser URLs in the ARMS Data API Tester & Explorer application
-
-def generate_browser_url(base_url, endpoint, api_key):
-    """
-    Generates a browser-accessible URL for the given endpoint and API key.
-    """
-    return f"{base_url}{endpoint}?api_key={api_key}"
+    
+# Example usage
+if __name__ == "__main__":
+    year_options = get_year_options()
+    print("Available Years:")
+    for year in year_options:
+        print(year)
+    
+    selected_year = input("Enter Year to test, or leave empty to fetch all: ").strip()
+    if selected_year:
+        test_year_endpoint(selected_year)
+    else:
+        test_year_endpoint()
 
 ```
 ## modules/report.py
 ```
 # report.py
-# Module for testing the /arms/report endpoint in the ARMS Data API Tester & Explorer application
-
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
 def test_report_endpoint():
-    """
-    Tests the /arms/report API endpoint and handles the response.
-    """
     print("\nTesting /arms/report Endpoint")
-
     try:
-        # Making a GET request to the /arms/report endpoint
         response = requests.get(f"{Config.BASE_URL}/report?api_key={Config.API_KEY}")
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, "data/storage/report_data.csv")
+        browser_url = generate_browser_url(Config.BASE_URL, "/report", Config.API_KEY)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "report_data.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/report", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
+        # Adjusted to handle JSON response
+        if isinstance(data, dict):
+            print(data)
+        elif isinstance(data, list):
+            print(data[:5])
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/report: {e}")
+        print(f"Error: {e}")
 
 ```
-## README.md
+## modules/variable.py
 ```
-
-```
-## requirements.txt
-```
-requests==2.25.1
-pandas==1.2.4
-
-```
-## modules/year.py
-```
-# year.py
-# Module for testing the /arms/year endpoint in the ARMS Data API Tester & Explorer application
-
+import csv
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
-def test_year_endpoint():
+# Function to load variable details from CSV
+def load_variable_details(filename):
+    with open(filename, mode='r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        # Assuming the correct CSV header is 'Column1.id'
+        return {row['Column1.id']: row for row in reader}
+
+# Function to fetch variable options for parameters
+def fetch_variable_options(filename="data/arms-all-variables-december-2023.csv"):
     """
-    Tests the /arms/year API endpoint and handles the response.
+    Fetches variable options from the CSV file and formats them for use in the application.
+    
+    :param filename: The path to the CSV file containing variable details.
+    :return: A dictionary with variable IDs as keys and variable names as values.
     """
-    print("\nTesting /arms/year Endpoint")
+    variable_options = {}
+
+    with open(filename, mode='r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            variable_id = row.get('Column1.id')
+            variable_name = row.get('Column1.name')
+            if variable_id and variable_name:
+                variable_options[variable_id] = variable_name
+
+    return variable_options
+
+# Function to test the /arms/variable endpoint with parameters
+def test_variable_endpoint(variable_id, variables_info, variable_options):
+    variable_info = variables_info.get(variable_id, {'Column1.name': 'Unknown', 'Column1.description': ''})
+    variable_name = variable_info['Column1.name']
+    variable_desc = variable_info['Column1.description']
+    print(f"\nTesting /arms/variable Endpoint for Variable: {variable_name} - {variable_desc}")
 
     try:
-        # Making a GET request to the /arms/year endpoint
-        response = requests.get(f"{Config.BASE_URL}/year?api_key={Config.API_KEY}")
+        response = requests.get(f"{Config.BASE_URL}/variable?api_key={Config.API_KEY}&id={variable_id}")
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, f"data/storage/variable_{variable_id}_data.csv")
+        browser_url = generate_browser_url(Config.BASE_URL, f"/variable?id={variable_id}", Config.API_KEY)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "year_data.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/year", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
+        if isinstance(data, dict):
+            print(data)
+        elif isinstance(data, list):
+            print(data)
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/year: {e}")
+        print(f"Error fetching data for variable {variable_name}: {e}")
 
 ```
-## config.py
+## modules/surveydata.py
 ```
-# config.py
-# Configuration file for ARMS Data API Tester & Explorer application
-
-class Config:
-    BASE_URL = "https://api.ers.usda.gov/data/arms"  # Base URL for the ARMS Data API
-    API_KEY = "YOUR_API_KEY"  # Placeholder for the API key
-```
-## modules/category.py
-```
-# category.py
-# Module for testing the /arms/category endpoint in the ARMS Data API Tester & Explorer application
-
+# surveydata.py
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
-def test_category_endpoint():
-    """
-    Tests the /arms/category API endpoint and handles the response.
-    """
-    print("\nTesting /arms/category Endpoint")
-
+def test_surveydata_endpoint(year=None, variable=None):
+    print("\nTesting /arms/surveydata Endpoint")
     try:
-        # Making a GET request to the /arms/category endpoint
-        response = requests.get(f"{Config.BASE_URL}/category?api_key={Config.API_KEY}")
+        url = f"{Config.BASE_URL}/surveydata"
+        params = {"api_key": Config.API_KEY}
+        post_data = {}
+        if year:
+            post_data['year'] = [year]
+        if variable:
+            post_data['variable'] = variable
+
+        response = requests.post(url, params=params, json=post_data)
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, "data/storage/surveydata.csv")
+        browser_url = generate_browser_url(url, params)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "category_data.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/category", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
+        print(data)
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/category: {e}")
+        print(f"Error: {e}")
 
-```
-## utils/api_request_handler.py
-```
-# api_request_handler.py
-# Utility script for handling API requests in the ARMS Data API Tester & Explorer application
-
-import requests
-
-def make_api_request(url, method='GET', data=None):
-    """
-    Makes an API request to the given URL with the specified method and data.
-    """
-    try:
-        if method == 'GET':
-            response = requests.get(url)
-        elif method == 'POST':
-            response = requests.post(url, json=data)
-        else:
-            raise ValueError("Unsupported HTTP method specified.")
-
-        response.raise_for_status()
-        return response.json()
-
-    except requests.RequestException as e:
-        print(f"API Request Error: {e}")
-        return None
+# Example usage
+if __name__ == "__main__":
+    selected_year = input("Enter Year (optional): ").strip()
+    selected_variable = input("Enter Variable (optional): ").strip()
+    test_surveydata_endpoint(selected_year, selected_variable)
 
 ```
 ## modules/farmtype.py
 ```
 # farmtype.py
-# Module for testing the /arms/farmtype endpoint in the ARMS Data API Tester & Explorer application
-
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
-def test_farmtype_endpoint():
+def get_farmtype_options():
     """
-    Tests the /arms/farmtype API endpoint and handles the response.
+    Fetches the farm types from the API and returns them as a list of options.
+    """
+    response = requests.get(f"{Config.BASE_URL}/farmtype?api_key={Config.API_KEY}")
+    response.raise_for_status()
+    data = response.json()['data']
+    return [(ft['id'], ft['name']) for ft in data]
+
+def test_farmtype_endpoint(farmtype_id=None):
+    """
+    Tests the /arms/farmtype API endpoint with an optional farmtype_id parameter.
     """
     print("\nTesting /arms/farmtype Endpoint")
-
     try:
-        # Making a GET request to the /arms/farmtype endpoint
-        response = requests.get(f"{Config.BASE_URL}/farmtype?api_key={Config.API_KEY}")
+        url = f"{Config.BASE_URL}/farmtype"
+        params = {"api_key": Config.API_KEY}
+        if farmtype_id is not None:
+            params['id'] = farmtype_id
+        
+        response = requests.get(url, params=params)
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, "data/storage/farmtype_data.csv")
+        browser_url = generate_browser_url(url, params)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "farmtype_data.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/farmtype", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
+        # Print the response data
+        print(data)
+        
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/farmtype: {e}")
+        print(f"Error: {e}")
+
+    
+# Example usage
+if __name__ == "__main__":
+    farmtype_options = get_farmtype_options()
+    print("Available Farm Types:")
+    for id, name in farmtype_options:
+        print(f"{id}: {name}")
+    
+    selected_id = input("Enter Farm Type ID to test, or leave empty to fetch all: ").strip()
+    if selected_id:
+        test_farmtype_endpoint(selected_id)
+    else:
+        test_farmtype_endpoint()
 
 ```
-## utils/csv_writer.py
+## modules/category.py
 ```
-# csv_writer.py
-# Utility script for writing data to CSV in the ARMS Data API Tester & Explorer application
+# category.py
+import requests
+from config import Config
+from utils.csv_writer import write_to_csv
+from utils.url_generator import generate_browser_url
 
-import csv
+def get_category_options():
+    response = requests.get(f"{Config.BASE_URL}/category?api_key={Config.API_KEY}")
+    response.raise_for_status()
+    data = response.json()['data']
+    return [(category['id'], category['name']) for category in data]
 
-def write_to_csv(data, filename):
-    """
-    Writes the given data to a CSV file with the specified filename.
-    """
-    with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile)
-        if isinstance(data, list) and len(data) > 0:
-            # Writing headers
-            writer.writerow(data[0].keys())
-            # Writing data rows
-            for row in data:
-                writer.writerow(row.values())
-        return filename
+def test_category_endpoint(category_id=None):
+    print("\nTesting /arms/category Endpoint")
+    try:
+        url = f"{Config.BASE_URL}/category"
+        params = {"api_key": Config.API_KEY}
+        if category_id is not None:
+            params['id'] = category_id
+
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        csv_file_path = write_to_csv(data, "data/storage/category_data.csv")
+        browser_url = generate_browser_url(url, params)
+        print(f"Browser URL: {browser_url}")
+
+        print(data)
+    except requests.RequestException as e:
+        print(f"Error: {e}")
+
+# Example usage
+if __name__ == "__main__":
+    category_options = get_category_options()
+    print("Available Categories:")
+    for id, name in category_options:
+        print(f"{id}: {name}")
+
+    selected_id = input("Enter Category ID to test, or leave empty to fetch all: ").strip()
+    if selected_id:
+        test_category_endpoint(selected_id)
+    else:
+        test_category_endpoint()
 
 ```

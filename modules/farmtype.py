@@ -1,37 +1,53 @@
 # farmtype.py
-# Module for testing the /arms/farmtype endpoint in the ARMS Data API Tester & Explorer application
-
 import requests
 from config import Config
 from utils.csv_writer import write_to_csv
 from utils.url_generator import generate_browser_url
 
-def test_farmtype_endpoint():
+def get_farmtype_options():
     """
-    Tests the /arms/farmtype API endpoint and handles the response.
+    Fetches the farm types from the API and returns them as a list of options.
+    """
+    response = requests.get(f"{Config.BASE_URL}/farmtype?api_key={Config.API_KEY}")
+    response.raise_for_status()
+    data = response.json()['data']
+    return [(ft['id'], ft['name']) for ft in data]
+
+def test_farmtype_endpoint(farmtype_id=None):
+    """
+    Tests the /arms/farmtype API endpoint with an optional farmtype_id parameter.
     """
     print("\nTesting /arms/farmtype Endpoint")
-
     try:
-        # Making a GET request to the /arms/farmtype endpoint
-        response = requests.get(f"{Config.BASE_URL}/farmtype?api_key={Config.API_KEY}")
+        url = f"{Config.BASE_URL}/farmtype"
+        params = {"api_key": Config.API_KEY}
+        if farmtype_id is not None:
+            params['id'] = farmtype_id
+        
+        response = requests.get(url, params=params)
         response.raise_for_status()
+        data = response.json()
 
-        # Processing the response
-        if response.status_code == 200:
-            data = response.json()
-            print("Data fetched successfully. Writing to CSV and displaying URL.")
+        csv_file_path = write_to_csv(data, "data/storage/farmtype_data.csv")
+        browser_url = generate_browser_url(url, params)
+        print(f"Browser URL: {browser_url}")
 
-            # Writing data to CSV
-            csv_file_path = write_to_csv(data, "farmtype_data.csv")
-
-            # Displaying the URL for browser access
-            browser_url = generate_browser_url(Config.BASE_URL, "/farmtype", Config.API_KEY)
-            print(f"Browser URL: {browser_url}")
-
-            # Display a preview of the results
-            print("Preview of the results:")
-            print(data[:5])  # Displaying the first 5 records as a preview
-
+        # Print the response data
+        print(data)
+        
     except requests.RequestException as e:
-        print(f"Error fetching data from /arms/farmtype: {e}")
+        print(f"Error: {e}")
+
+    
+# Example usage
+if __name__ == "__main__":
+    farmtype_options = get_farmtype_options()
+    print("Available Farm Types:")
+    for id, name in farmtype_options:
+        print(f"{id}: {name}")
+    
+    selected_id = input("Enter Farm Type ID to test, or leave empty to fetch all: ").strip()
+    if selected_id:
+        test_farmtype_endpoint(selected_id)
+    else:
+        test_farmtype_endpoint()
