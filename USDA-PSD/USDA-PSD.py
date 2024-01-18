@@ -126,7 +126,7 @@ def main():
         all_attributes = set()
 
         # Collect and aggregate country data
-        for year in range(1960, 2023):
+        for year in range(2014, 2024):
             json_data_country = fetch_data(commodity_code, str(year), API_ENDPOINT)
             organized_data_country = parse_data(json_data_country, commodity_code, str(year))
 
@@ -150,7 +150,7 @@ def main():
         write_to_csv(all_data_country, filename_country, all_attributes)
 
         # Collect and aggregate world data
-        for year in range(1960, 2023):
+        for year in range(2014, 2024):
             json_data_world = fetch_data(commodity_code, str(year), WORLD_API_ENDPOINT)
             organized_data_world = parse_data(json_data_world, commodity_code, str(year))
 
