@@ -19,6 +19,8 @@ def process_file(filepath, master_columns):
 # Main function to consolidate data
 def consolidate_data(file_list):
     all_columns = set()
+    dataframes = []  # List to store individual dataframes
+
     # Identify all unique columns
     for filepath in file_list:
         df = pd.read_csv(filepath)
@@ -26,18 +28,75 @@ def consolidate_data(file_list):
 
     master_columns = list(all_columns) + ['Commodity Code']
     
-    # Consolidate data
-    consolidated_data = pd.DataFrame(columns=master_columns)
+    # Process and collect data frames
     for filepath in file_list:
         df_processed = process_file(filepath, master_columns)
-        consolidated_data = consolidated_data.append(df_processed, ignore_index=True)
+        dataframes.append(df_processed)
+    
+    # Concatenate all data frames
+    consolidated_data = pd.concat(dataframes, ignore_index=True)
     
     # Save to a new file
     consolidated_data.to_csv('consolidated_data.csv', index=False)
     print("Consolidation Complete. File saved as 'consolidated_data.csv'.")
 
+
 # List of file paths to process
-file_list = ['path_to_file1.csv', 'path_to_file2.csv', ...]
+file_list = [
+    'psd_data_0410000_country.csv',
+    'psd_data_0410000_world.csv',
+    'psd_data_0440000_country.csv',
+    'psd_data_0440000_world.csv',
+    'psd_data_0813100_country.csv',
+    'psd_data_0813100_world.csv',
+    'psd_data_0813200_country.csv',
+    'psd_data_0813200_world.csv',
+    'psd_data_0813300_country.csv',
+    'psd_data_0813300_world.csv',
+    'psd_data_0813500_country.csv',
+    'psd_data_0813500_world.csv',
+    'psd_data_0813600_country.csv',
+    'psd_data_0813600_world.csv',
+    'psd_data_0813700_country.csv',
+    'psd_data_0813700_world.csv',
+    'psd_data_0813800_country.csv',
+    'psd_data_0813800_world.csv',
+    'psd_data_0814200_country.csv',
+    'psd_data_0814200_world.csv',
+    'psd_data_2221000_country.csv',
+    'psd_data_2221000_world.csv',
+    'psd_data_2222000_country.csv',
+    'psd_data_2222000_world.csv',
+    'psd_data_2223000_country.csv',
+    'psd_data_2223000_world.csv',
+    'psd_data_2224000_country.csv',
+    'psd_data_2224000_world.csv',
+    'psd_data_2226000_country.csv',
+    'psd_data_2226000_world.csv',
+    'psd_data_2231000_country.csv',
+    'psd_data_2231000_world.csv',
+    'psd_data_2232000_country.csv',
+    'psd_data_2232000_world.csv',
+    'psd_data_4232000_country.csv',
+    'psd_data_4232000_world.csv',
+    'psd_data_4233000_country.csv',
+    'psd_data_4233000_world.csv',
+    'psd_data_4234000_country.csv',
+    'psd_data_4234000_world.csv',
+    'psd_data_4235000_country.csv',
+    'psd_data_4235000_world.csv',
+    'psd_data_4236000_country.csv',
+    'psd_data_4236000_world.csv',
+    'psd_data_4239100_country.csv',
+    'psd_data_4239100_world.csv',
+    'psd_data_4242000_country.csv',
+    'psd_data_4242000_world.csv',
+    'psd_data_4243000_country.csv',
+    'psd_data_4243000_world.csv',
+    'psd_data_4244000_country.csv',
+    'psd_data_4244000_world.csv'
+]
+
 
 if __name__ == "__main__":
     consolidate_data(file_list)
