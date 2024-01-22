@@ -52,11 +52,12 @@ groups = {
 }
 
 # Generate tables
-counter = 1  # Initialize counter for filenames
 for group_name, group_info in groups.items():
+    counter = 1  # Reset counter for each group
     for commodity_code in group_info["commodity_codes"]:
         filename_prefix = f"{group_name}-{counter}"
         generate_table(df, commodity_code, group_info["country"], attributes, years, filename_prefix)
-        counter += 1  # Increment the counter for the next file
+        counter += 1  # Increment the counter for the next file in the same group
 
 print("All tables processed.")
+
