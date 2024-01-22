@@ -36,6 +36,8 @@ def generate_table(df, commodity_code, country, attributes, years, filename_pref
         # Set the index name to 'Variable/Year' before saving the CSV
         results_df.index.name = 'Variable/Year'
 
+        table_pivot = table_pivot.dropna(how='all', axis=0)
+
         # Save the results to a CSV file in the 'Final-Tables' folder
         results_df.to_csv(output_file_path, index=True)  # index=True to include the index in the CSV
         print(f"Table saved as {output_file_path}")
