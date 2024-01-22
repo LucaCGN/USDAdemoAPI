@@ -36,7 +36,8 @@ df = read_data('consolidated_data.csv')
 
 wheat_attributes = ['Beginning Stocks', 'Production', 'Area Harvested', 'MY Imports', 'Total Supply',
                     'Total Consumption', 'Feed and Residual', 'FSI Consumption', 'Yield', 'MY Exports', 'Ending Stocks']
-wheat_years = ["2021", "2022", "2023"]
+wheat_years = ['2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015', '2014', '2013']
+
 wheat_code = "0410000"
 wheat_countries = {
     "CHIODTRIGO": "China",

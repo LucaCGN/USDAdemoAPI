@@ -33,7 +33,7 @@ df = read_data('consolidated_data.csv')
 
 corn_attributes = ['Beginning Stocks', 'Production', 'Area Harvested', 'MY Imports', 'Total Supply',
                     'Total Consumption', 'Feed and Residual', 'FSI Consumption', 'MY Exports', 'Yield', 'Ending Stocks']
-corn_years = ["2021", "2022", "2023"]
+corn_years = ['2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015', '2014', '2013']
 corn_code = "0440000"
 corn_countries = {
     "MUNODMILHO": "World",

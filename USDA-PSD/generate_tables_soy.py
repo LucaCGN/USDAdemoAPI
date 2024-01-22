@@ -42,7 +42,8 @@ df = read_data(consolidated_data_path)
 
 # Common specifications for attributes and years
 attributes = ['Beginning Stocks', 'Production', 'MY Imports', 'Crush', 'Total Dom. Cons.', 'MY Exports', 'Ending Stocks']
-years = ["2021", "2022", "2023"]
+years = ['2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015', '2014', '2013']
+
 
 # Commodity codes and countries for the groups
 groups = {

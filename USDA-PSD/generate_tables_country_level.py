@@ -3,13 +3,12 @@ import os
 
 def read_data(file_path):
     print(f"Reading data from {file_path}...")
-    # Make sure this is inside the same block where you're going to use 'df'
     return pd.read_csv(file_path, dtype={'Commodity Code': str, 'Market Year': str})
 
 def generate_table(df, table_spec):
-    years = ['2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023']
+    years = ['2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015', '2014']
     print(f"\nGenerating table for {table_spec['filename']}...")
-    
+
     # Filter DataFrame based on commodity code, countries, and specified years
     df_filtered = df[
         (df['Commodity Code'] == table_spec['commodity_code']) & 
@@ -21,21 +20,21 @@ def generate_table(df, table_spec):
     cols_to_keep = ['Country', 'Market Year'] + [col for col in df.columns if table_spec['attribute_descriptions'][0] in col]
     df_filtered = df_filtered[cols_to_keep]
 
-    # Debug: Print the DataFrame after filtering
-    print(df_filtered.head())
-
     # Pivot the DataFrame to get years as columns and countries as rows
     table_pivot = df_filtered.pivot_table(index='Country', columns='Market Year', values=table_spec['attribute_descriptions'][0], aggfunc='sum')
-    
+
+    # Reorder pivot table columns to match the desired year order
+    table_pivot = table_pivot[years]
+
     # Reset the index to turn the 'Country' index into a column
     table_pivot.reset_index(inplace=True)
-    
+
     # Remove rows where 'Country' is empty or NaN
     table_pivot = table_pivot[table_pivot['Country'].notna() & (table_pivot['Country'] != '')]
 
     # Define the output path and save the table
     output_path = os.path.join(table_spec['output_dir'], f"{table_spec['filename']}.csv")
-    table_pivot.to_csv(output_path, index=False)  # Set index=False to avoid writing row numbers
+    table_pivot.to_csv(output_path, index=False)
     print(f"Table saved as {output_path}")
 
 # Make sure this is inside the same block where you're going to use 'df'
